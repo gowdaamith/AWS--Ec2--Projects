@@ -1,0 +1,66 @@
+Project 1: Hosting a Static Website on Ec2 (Beginner)
+-----------------------------------------------------
+
+Step 1 : Launch a Ec2 Instance 
+_______
+Configuration to choose: 
+- AMI - Quick Start = Ubuntu
+- Instance type     = t2.micro
+- Key Pair          = Create or use existing
+- Network           = Now default 
+- Security Group    = Allow SSH - Your IP
+                      Allow HTTP - Anywhere 
+- Elastic Block Vol = Default 
+
+Step 2 : Connect to the Ec2 Instance
+_______
+Either connect directly through the option provided by the Ec2 
+                            or 
+Connect through terminal using the command
+>> ssh -i  filename.pem ubuntu@Ec2IPaddress
+
+Step 3:  Configure the Nginx / Apache or Install the Web Server 
+______
+Here we will use the nginx because its simple and fast 
+
+Run these commands on Ec2 : 
+>> sudo apt update -y 
+>> sudo apt install nginx -y
+>> sudo systemctl  start nginx 
+>> sudo systemctl enable nginx
+
+To check on which port the  nginx is running use: 
+>> sudo netstat -tulnp | grep  nginx
+
+Now Open the browser and visit :
+>> http://your - Ec2 - Public IP 
+
+Step 4: Replace the default WebSite with Your Own 
+_______
+sudo tee /usr/share/nginx/html/index.html > /dev/null << EOF
+<html>
+  <head><title>My first EC2 website</title></head>
+  <body style="font-family: Arial;">
+      <h1>Hello from Amith's EC2 Website!</h1>
+      <p>This website is hosted on an EC2 instance.</p>
+  </body>
+</html>
+EOF
+Refresh the browser -> Your page appears
+
+
+Step 5: Attach a Custom Domain [Later ]
+_______
+If You want : 
+- Buy a Domain 
+- Use Route 53  to point to the Ec2  public IP 
+
+Step 6: Host Images ,CSS ,JS 
+_______
+Upload file to : 
+
+/usr/share/nginx/html/
+Example : 
+sudo nano /usr/share/nginx/html/style.css
+
+
