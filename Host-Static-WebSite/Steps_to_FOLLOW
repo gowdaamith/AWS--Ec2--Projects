@@ -37,16 +37,71 @@ Now Open the browser and visit :
 
 Step 4: Replace the default WebSite with Your Own 
 _______
-sudo tee /usr/share/nginx/html/index.html > /dev/null << EOF
+Remove the default nginx page: 
+>> sudo rm /var/www/html/index.nginx-debian.html
+Create your real website file
+>> sudo vim /var/www/html/index.html
+
+To add the CSS and JS files use  the following commands: 
+sudo mkdir -p /var/www/html/css
+sudo mkdir -p /var/www/html/js
+
+Paste the HTML code in the html directory :
+
+<!DOCTYPE html>
 <html>
-  <head><title>My first EC2 website</title></head>
-  <body style="font-family: Arial;">
-      <h1>Hello from Amith's EC2 Website!</h1>
-      <p>This website is hosted on an EC2 instance.</p>
-  </body>
+<head>
+    <title>My First EC2 Website</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <h1>Hello from Amith's EC2 Website!</h1>
+    <p>This website is hosted on an EC2 instance.</p>
+
+    <button id="btn">Click Me</button>
+    <p id="message"></p>
+
+    <script src="js/script.js"></script>
+</body>
 </html>
-EOF
-Refresh the browser -> Your page appears
+
+Paste this in a "style.css" file in css directory 
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    text-align: center;
+    padding-top: 60px;
+}
+
+h1 {
+    color: #333;
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+Paste this  in "script.js" in js directory 
+
+document.getElementById("btn").addEventListener("click", function() {
+    document.getElementById("message").textContent = "Button clicked! Welcome Amith 🚀";
+});
+
+
+Restart the nginx: >> sudo systemctl restart nginx
+Test the nginx   : >> curl http://localhost
+
 
 
 Step 5: Attach a Custom Domain [Later ]
@@ -54,7 +109,7 @@ _______
 If You want : 
 - Buy a Domain 
 - Use Route 53  to point to the Ec2  public IP 
-
+d
 Step 6: Host Images ,CSS ,JS 
 _______
 Upload file to : 
