@@ -30,7 +30,7 @@ Run these commands on Ec2 :
 >> sudo systemctl enable nginx
 
 To check on which port the  nginx is running use: 
->> sudo netstat -tulnp | grep  nginx
+>> sudo ss -tulnp | grep  nginx
 
 Now Open the browser and visit :
 >> http://your - Ec2 - Public IP 
@@ -39,8 +39,8 @@ Step 4: Replace the default WebSite with Your Own
 _______
 Remove the default nginx page: 
 >> sudo rm /var/www/html/index.nginx-debian.html
-Create your real website file
->> sudo vim /var/www/html/index.html
+Create your real website file 
+>> sudo vim /var/www/html/index.html                    the owner of this file will become the root not the user by using which it is created 
 
 To add the CSS and JS files use  the following commands: 
 sudo mkdir -p /var/www/html/css
