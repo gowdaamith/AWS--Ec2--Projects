@@ -28,7 +28,7 @@ Step 3: Here we are using the Node.js for the backend purpose
  Intall the Node.js and Nginx
 
  >> sudo apt update -y
- >> sudo -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -    # this command prepares  your ubuntu  systems so that you can install Node.js 18 using apt
+ >> curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -    # this command prepares  your ubuntu  systems so that you can install Node.js 18 using apt
  >> sudo apt install -y  nodejs nginx
 
 Check the node version : 
@@ -37,7 +37,7 @@ Check the node version :
 Step 4: Crate a Node.js app
 ------------------------------------------------------------
 sudo mkdir -p /var/www/app
-sudo tee /var/www/app/server.js > dev/null <<EOF
+sudo tee /var/www/app/server.js > /dev/null <<EOF
 const express = requires("express");
 const app = express();
 app.get("/",(req,res)=> {
@@ -51,7 +51,7 @@ Install dependencies:
 
 Step 5: Create systemmd Service
 -----------------------------------------------------------
-sudo tee /etc/systemd/system/nodeapp.service > dev/null <<EOF
+sudo tee /etc/systemd/system/nodeapp.service > /dev/null <<EOF
 [Unit]                              # Service Metadata
 Description=Node.js APP
 After=network.target                # this tells "Start the service after the network is up"
@@ -72,6 +72,14 @@ Enable the service:
 >> sudo systemctl enable nodeapp            
 >> sudo systemctl start nodeapp
 >> sudo systemctl status nodeapp
+
+If something goes wrong from the "systemd[1]"  then use this code to check what happened
+>> sudo journalctl -u nodeapp --no-pager -n 30       # this command is used to view the log from systemd journal 
+
+This command says : 
+show the last 30days lines of the nodeapp service ,without paging [no scrolling ] using the root privileges
+
+
 
 The file /etc/systemd/system/nodeapp.service ensures:
 *App start automatically at boot
@@ -111,6 +119,8 @@ server {
 
 Then restart the nginx: 
 >> sudo systemctl restart nginx
+
+if the nginx doesn't work check the nginx file  "/etc/nginx/site-enabled/default"
 
 Now test in the browser 
 >> http://<Ec2_public_IP>
