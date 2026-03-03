@@ -1,0 +1,120 @@
+What we will do here is : 
+
+1.Launch an Ec2 Instance 
+2.Intall Node.js 
+3.Create backend application 
+4.Create a systemd service
+5.Configure Nginx reverse proxy 
+5.Test the app in browser 
+
+Step 1: Launch Ec2 Instance 
+---------------------------
+1.Go to the AWS console  -> Ec2 
+2.Click on launch instance -> and name it as backend-server
+3.Select the machine image or use the existing image
+4.Instance type: t2.micro
+5.Key pair : Create /choose already existing one 
+6.Security Group : Allow SSH (22) and http (80)
+8.Launch the Instance
+
+Step 2: Connect to the Ec2
+---------------------------
+SSH into the instance
+>> ssh -i keypairfilepath.pem username@public_IP_address
+
+Step 3: Here we are using the Node.js for the backend purpose 
+-------------------------------------------------------------
+
+ Intall the Node.js and Nginx
+
+ >> sudo apt update -y
+ >> sudo -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -    # this command prepares  your ubuntu  systems so that you can install Node.js 18 using apt
+ >> sudo apt install -y  nodejs nginx
+
+Check the node version : 
+>> node -v
+
+Step 4: Crate a Node.js app
+------------------------------------------------------------
+sudo mkdir -p /var/www/app
+sudo tee /var/www/app/server.js > dev/null <<EOF
+const express = requires("express");
+const app = express();
+app.get("/",(req,res)=> {
+  res.send("hello from node.js server!");
+});
+app.listen(3000,() => console.log("App running on port 3000"));
+EOF
+
+Install dependencies:
+>> sudo npm install expresss --prefix /var/www/app
+
+Step 5: Create systemmd Service
+-----------------------------------------------------------
+sudo tee /etc/systemd/system/nodeapp.service > dev/null <<EOF
+[Unit]                              # Service Metadata
+Description=Node.js APP
+After=network.target                # this tells "Start the service after the network is up"
+
+[Service]                                            # This tells how the app run 
+ExecStart=/usr/bin/node /var/www/app/server.js       # The exact command that systemcd runs when starting your app it runs the Node.js and loads the server file
+Restart= always                                      # Other options available are on-failure,no,on-abort
+User=root                                            # Runs the app as root user which is not recommended ,use other user 
+WorkingDirectory=/var/www/app                        # Systemd will cd into this directory before running your app
+
+[Install]                                            # When to start the service
+WantedBy=multi-user.target                           # start the servive automatically at boot normal multi-user mdoe 
+EOF
+
+
+Enable the service: 
+>> sudo systemctl daemon-reload             #  tells the systemcd to reload all the services  files because something changed     
+>> sudo systemctl enable nodeapp            
+>> sudo systemctl start nodeapp
+>> sudo systemctl status nodeapp
+
+The file /etc/systemd/system/nodeapp.service ensures:
+*App start automatically at boot
+*App never stops
+*If app crashes -> systemd restart it 
+This is like having a worker whose job is : 
+>> Keep the backend app running always
+without systemd:
+>> App stops as soon as you close the terminal 
+
+
+| Term                      | Meaning                        |
+| ------------------------- | ------------------------------ |
+| **Daemon**                | A background process (service) |
+| **systemd**               | The system daemon manager      |
+| **daemon-reload**         | Reload service definitions     |
+| **sshd / nginx / mysqld** | Examples of daemons            |
+
+
+Step 6: Configure NGINX Reverse  Proxy 
+-------------------------------------------------------------
+Open Nginx config:
+----------------------
+sudo vim /etc/nginx/sites-enabled/default
+
+Replace everything with:
+
+server {
+      listen 80;
+
+      location / {
+          proxy_pass http://127.0.0.1:3000;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+      }
+}
+
+Then restart the nginx: 
+>> sudo systemctl restart nginx
+
+Now test in the browser 
+>> http://<Ec2_public_IP>
+
+
+
+
