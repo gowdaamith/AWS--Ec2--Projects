@@ -1,0 +1,17 @@
+Since Terraform attaches the volume but cannot format it safely 
+You must do it manually : 
+
+SSH into the Ec2:
+
+>> lsblk
+>> sudo mkfs -t ext4 /dev/xvdf
+>> sudo mount /dev/xvdf /mnt/files
+>> sudo chown ubuntu:ubuntu /mnt/files
+
+To auto mount after the reboot add the UUID of the block [ blkid ] in to the /etc/fstab
+as follows: 
+
+UUID=" " /mnt/files ext4 defaults,nofail  0 2
+
+to test if the mount is good or not use 
+sudo mount -a 
