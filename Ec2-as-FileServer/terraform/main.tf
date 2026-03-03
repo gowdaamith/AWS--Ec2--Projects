@@ -66,6 +66,45 @@ resource "aws_vpc_security_group_egress_rule" "allow_all"{
 resource "aws_instances" "file_server"{
   ami = "ami-0f5ee92e2d63afc18"
   instance_type = "t2.micro
-  seurity_groups = [ aws_security_group.file_sq.
+  seurity_groups = [ aws_security_group.allow_http_ssh]
+  user_data = <<-EOF
+    #!/bin/bash
+    apt update -y 
+    apt install -y nginx 
+
+    mkdir -p /mnt/files
+    cat << 'NGINX' >/etc/nginx/sites-enabled/default
+    server {
+        listen 80;
+
+        location /files/ {
+            alias /mnt/files/;
+            autoindex on;
+        }
+    }
+    NGINX
+
+    systemctl restart nginx
+    EOF
+ tags = {
+  name = "Ec2--file-server"
+ }
+}
+resource "aws_ebs_volume" "file_volume" {
+  availability_zone = aws_instance.file_server.availability_zone
+  size = 5
+  type = "gp3"
+
+  tags = {
+    name = "files-storage"
+  }
+}
+resource "aws_volume_attachment" "ebs_att" {
+  device_name = "/dev/sdf"
+  volume_id = aws_ebs_volume.files_volume.id
+  instance_id = aws_instance.file_server.id
+}
+
+
   
   
