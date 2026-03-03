@@ -1,0 +1,36 @@
+Here  we will be using aWs services like: 
+*Ec2
+*Load Balancers
+*Auto Scaling Groups
+
+Architecture of this is:
+
+
+                 ┌───────────────────────────┐
+                 │  Application Load Balancer │
+                 └──────────────┬────────────┘
+                                │
+                    ┌───────────┴───────────┐
+                    │ Target Group (port 3000) │
+                    └───────────┬───────────┘
+                                │
+                ┌───────────────┴────────────────┐
+                │ Auto Scaling Group (EC2 pool)   │
+                │ Min: 2 | Desired: 2 | Max: 4    │
+                └─────────────────────────────────┘
+
+We will do in the 3 parts : 
+1.Creating a Launchtempalte by using the last project Ec2 instance
+2.Creaing a target Group
+3.Creating a ALB + Autoscaling Group (Integrated )
+
+
+
+                                   Part 1 
+              Creating a Launch tempalte (Which contians  Ec2 + APP + Userdata )
+
+Go to the Ec2 -> Select the instance from which you want to create the template 
+Go to the Actions -> click on Images and template ->Give the name   ->
+Go on and give other information if you need or change the current exitsing  configuration _>
+Click on Create template 
+
