@@ -1,10 +1,4 @@
-Here  we will be using aWs services like: 
-*Ec2
-*Load Balancers
-*Auto Scaling Groups
-
-Architecture of this is:
-
+Architecture of this application 
 
                  ┌───────────────────────────┐
                  │  Application Load Balancer │
@@ -19,18 +13,166 @@ Architecture of this is:
                 │ Min: 2 | Desired: 2 | Max: 4    │
                 └─────────────────────────────────┘
 
-We will do in the 3 parts : 
-1.Creating a Launchtempalte by using the last project Ec2 instance
-2.Creaing a target Group
-3.Creating a ALB + Autoscaling Group (Integrated )
+
+We will do this in 3 Parts :
+
+PART 1: Create a launch template with backend app
+PART 2: Create Target Group
+PART 3: Create ALB + AutoScaling Group (integrated)
 
 
 
-                                   Part 1 
-              Creating a Launch tempalte (Which contians  Ec2 + APP + Userdata )
+                         PART: 1
 
-Go to the Ec2 -> Select the instance from which you want to create the template 
-Go to the Actions -> click on Images and template ->Give the name   ->
-Go on and give other information if you need or change the current exitsing  configuration _>
-Click on Create template 
+Launch Template (Contians Ec2 + APP + UserData)
+
+1.Go to Instances section -> Select the Instance from which you want to create the instance
+2.Click on Action -> Image and template -> Create template from instance  
+3.Keep the Configuration same if you want to same things or Edit it
+4.Paste this in the userdata
+
+#!/bin/bash
+apt update -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -what does this line means 
+apt install -y nodejs npm
+mkdir -p /app
+cd /app
+cat <<EOF > server.js
+const http = require('http');
+const os = require('os');
+http.createServer((req, res) => {
+    res.writeHead(200, {"Content-Type": "text/plain"});
+    res.end("Hello from instance: " + os.hostname());
+}).listen(3000);
+EOF
+
+node /app/server.js &
+
+                           PART 2 
+                   Create a Target Group
+
+
+Ec2 -> Target Group ->Create a Target Group 
+
+1.Click on Create TargetGroup 
+2.Give the TargetGroup Name,Protocol,IP address type ,VPC ,Protocol Version
+3.Specify the things about the health checks : Health check Protocol , Health check Path 
+
+Do Not register the targets
+ASG will register them automatically later 
+Click create 
+
+                          PART 3 
+                 Create ALB + Auto Scaling Group
+
+Step A Create ALB 
+----------------------
+Give the Name ,Scheme ,Load-Balancer IP address type 
+Speicfy the networking configuration 
+Specify the Security Groups
+Listeners and routing 
+And specify the extrathings you need to configure  
+
+Create a LoadBalancer
+
+Step B Createa a AutoScaling Group 
+-------------------------
+Click on Create AutoScaling Group
+Give It name ,Launch template
+Override the Instance type  or if you want  some changes speicfy it also 
+Specify the Network configuration 
+Attach the existing loadBalancer 
+Specify extra  configuration if you need 
+Configure the group size and scaling  
+At last specify all the things and create 
+
+
+
+
+Ok the project is completed 
+
+
+If the Error accours like Unhealthy Instance :
+ssh into the instance and check wheather  the port is being used or not 
+>> sudo ss -tulnp | grep 3000
+if its being used then it will output the information of the processes its using like 
+>> LISTEN 0 128 0.0.0.0:3000 0.0.0.0:* users:(("node",pid=1234,fd=12))
+
+You can also curl into the local host and check wheather the service is available or not 
+>> curl localhost:3000
+
+The problem faced here is regarding the (user_data_failure)
+When Ec2 Boots ,you user_data tries  to execurte if any line fails it willskip that line 
+and continue with the next line unless you use set -e 
+
+To check which line failed Use: 
+>> sudo cat /var/log/cloud-init-output.log
+>> sudo cat /var/log/cloud-init.log
+
+Look for lines with Error or failed - this will tell exactly which command didn't work 
+
+
+Use this User_data instead if it doesn't work [Not checked ro used ] 
+#!/bin/bash
+# Update system
+apt update -y
+apt upgrade -y
+
+# Install curl and Node.js 20 LTS
+apt install -y curl
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+
+# Create application directory
+mkdir -p /app
+
+# Create a simple Node.js server
+cat <<EOF > /app/server.js
+const http = require('http');
+const os = require('os');
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Hello from instance: " + os.hostname());
+});
+
+server.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
+EOF
+
+# Create systemd service to run Node.js server
+cat <<EOF > /etc/systemd/system/nodeapp.service
+[Unit]
+Description=Node.js App
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /app/server.js
+Restart=always
+User=ubuntu
+Environment=NODE_ENV=production
+WorkingDirectory=/app
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd and start service
+systemctl daemon-reload
+systemctl enable nodeapp
+systemctl start nodeapp
+
+# Optional: allow traffic on port 3000 via ufw (if firewall is active)
+ufw allow 3000/tcp
+
+
+
+
+
+
+
+
+
+
 
