@@ -1,0 +1,11 @@
+variable "name" {}
+variable "ami" {}
+variable "instance_type" {}
+variable "key_name" {}
+variable "ec2_sg_name" {}
+variable "tg_arn" {}
+variable "subnet_id" {}
+variable "min_size" {}
+variable "max_size" {}
+variable "desired_capacity" {}
+variable "user_data" {}
